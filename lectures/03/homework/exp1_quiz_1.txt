@@ -1,0 +1,13 @@
+[model] claude-haiku-5-5
+第2回の確認問題です。
+
+**問題：「LoRA」の意味は？**
+
+答えを考えてから、「答え」と送ってください。確認できます。
+
+（関係する回：第2回）
+
+--- trace ---
+[tool call]   make_quiz({"lecture": 2})
+[tool return] make_quiz -> {"question": "「LoRA」の意味は？", "answer": "事前学習済みの重みは固定したまま、重みの更新分を2つの小さな行列の積（低ランク行列）で表し、その小さな行列だけを学習するPEFT手法。学習するパラメータが少なく、…
+[usage] RunUsage(cost=Decimal('0.0003181'), details={'input_tokens': 2046, 'output_tokens': 227, 'cache_creation_input_tokens': 0, 'cache_read_input_tokens': 0, 'thinking_tokens': 112}, input_tokens=2046, output_tokens=227, requests=2, tool_calls=1)

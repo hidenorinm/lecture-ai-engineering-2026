@@ -1,0 +1,18 @@
+[model] claude-haiku-5-5
+**第2回の確認問題**
+
+**問題：「量子化」の意味は？**
+
+<details>
+<summary>答えを表示</summary>
+
+モデルの重みを少ないビット数（例：16ビットから4ビット）で表し、メモリ使用量や計算量を減らす技術。精度は少し下がることがある。
+
+</details>
+
+関係する回：第2回
+
+--- trace ---
+[tool call]   make_quiz({"lecture": 2})
+[tool return] make_quiz -> {"question": "「量子化」の意味は？", "answer": "モデルの重みを少ないビット数（例：16ビットから4ビット）で表し、メモリ使用量や計算量を減らす技術。精度は少し下がることがある。"}…
+[usage] RunUsage(cost=Decimal('0.0003631'), details={'input_tokens': 2056, 'output_tokens': 315, 'cache_creation_input_tokens': 0, 'cache_read_input_tokens': 0, 'thinking_tokens': 145}, input_tokens=2056, output_tokens=315, requests=2, tool_calls=1)

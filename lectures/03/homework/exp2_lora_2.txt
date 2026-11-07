@@ -1,0 +1,14 @@
+[model] claude-haiku-5-5
+**LoRA** と **QLoRA** はどちらも、事前学習済みモデルの一部だけを小さく学習するPEFT（パラメータ効率の良いファインチューニング）の手法です。違いは「ベースモデルをどの精度で持つか」にあります。
+
+- **LoRA**: ベースモデルの重みは固定したまま、更新分を2つの小さな行列の積（低ランク行列）で表し、その小さな行列だけを学習します。学習するパラメータが少なく、結果のアダプタも小さなファイルで保存できます。
+- **QLoRA**: LoRAの仕組みに加えて、ベースモデルの重みを4ビットなどに量子化してメモリを節約します。そのため、より大きなモデルを小さなGPUで扱えます。
+
+まとめると、QLoRAは「LoRAのメモリ消費をさらに減らした版」と考えると分かりやすいです。ただし、4ビット化による出力の違いは発生しうるので、講座の発展課題ではメモリ量と出力の差を比べます。
+
+関係する回: 第2回（LoRA、QLoRA の両方を扱います）
+
+--- trace ---
+[tool call]   search_glossary({"query": "LoRA QLoRA"})
+[tool return] search_glossary -> [{"term": "LoRA", "lecture": 2, "definition": "事前学習済みの重みは固定したまま、重みの更新分を2つの小さな行列の積（低ランク行列）で表し、その小さな行列だけを学習するPEFT手法。学習するパラ…
+[usage] RunUsage(cost=Decimal('0.0004906'), details={'input_tokens': 2351, 'output_tokens': 511, 'cache_creation_input_tokens': 0, 'cache_read_input_tokens': 0, 'thinking_tokens': 65}, input_tokens=2351, output_tokens=511, requests=2, tool_calls=1)
