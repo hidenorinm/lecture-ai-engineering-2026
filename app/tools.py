@@ -6,10 +6,13 @@
 
 import json
 import random
+from datetime import datetime
 from functools import cache
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+LOG_DIR = Path(__file__).resolve().parent.parent / "learning_log"
 MAX_RESULTS = 3
 
 
@@ -93,3 +96,17 @@ def make_quiz(lecture: int) -> str:
         {"question": f"「{entry['term']}」の意味は？", "answer": entry["definition"]},
         ensure_ascii=False,
     )
+
+
+def save_learning_log(title: str, content: str) -> str:
+    """学習の記録を、今日の日付のファイルに追記して保存する。
+
+    「学習の記録・メモを保存して」と頼まれたときに使う。保存は利用者の承認を得てから行われる。
+    title は記録の見出し（短く）、content は記録の本文。保存先のファイルはこちらで決まる。
+    """
+    today = datetime.now(ZoneInfo("Asia/Tokyo")).date()  # Codespace は UTC なので日本時間にそろえる
+    LOG_DIR.mkdir(exist_ok=True)
+    path = LOG_DIR / f"{today.isoformat()}.md"
+    with open(path, "a", encoding="utf-8") as f:
+        f.write(f"## {title}\n\n{content}\n\n")
+    return f"{path.relative_to(LOG_DIR.parent)} に保存しました。"
