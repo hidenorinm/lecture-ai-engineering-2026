@@ -7,6 +7,7 @@ import os
 
 # 既定モデル。環境変数 AIE_MODEL を設定すると切り替えられる。
 #   例: export AIE_MODEL=gemini-3.5-flash
+#   "claude" で始まる名前（例: claude-haiku-5-5）なら Claude を使う（ANTHROPIC_API_KEY が必要）
 DEFAULT_MODEL = "gemini-3.5-flash-lite"
 MODEL = os.getenv("AIE_MODEL", DEFAULT_MODEL)
 
@@ -22,13 +23,22 @@ def api_error_message(status: int, detail: str = "") -> str:
     return f"APIエラー（{status}）: {detail}"
 
 
-def get_api_key() -> str:
-    """環境変数 GEMINI_API_KEY を返す。未設定なら手順を表示して終了する。"""
-    key = os.getenv("GEMINI_API_KEY")
+def is_claude(model: str) -> bool:
+    """モデル名が "claude" で始まるなら Claude（Anthropic）、それ以外は Gemini として扱う。"""
+    return model.startswith("claude")
+
+
+def get_api_key(model: str = "") -> str:
+    """モデルに合う API キーを環境変数から返す。未設定なら手順を表示して終了する。
+
+    Claude のモデル名なら ANTHROPIC_API_KEY、それ以外（引数なしを含む）は GEMINI_API_KEY。
+    """
+    name = "ANTHROPIC_API_KEY" if is_claude(model) else "GEMINI_API_KEY"
+    key = os.getenv(name)
     if not key:
         raise SystemExit(
-            "環境変数 GEMINI_API_KEY が見つかりません。\n"
-            "1. GitHub の Settings → Codespaces → Secrets に GEMINI_API_KEY を登録し、\n"
+            f"環境変数 {name} が見つかりません。\n"
+            f"1. GitHub の Settings → Codespaces → Secrets に {name} を登録し、\n"
             "   使う repository に自分の fork を選んでください。\n"
             "2. Codespaces を起動したあとに登録した場合は、Codespaces を再起動してください。\n"
             "   （左下の「Codespaces」→「Stop Current Codespace」→ 再度開く）"

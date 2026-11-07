@@ -1,0 +1,15 @@
+[model] claude-haiku-5-5
+「宿題の3レベル」は、AIE2026の宿題の構成を指す用語です。3つの段階があります。
+
+1. **基礎**: 講義内容の確認
+2. **実装**: 自分でコードを書く
+3. **発展**: 調査や試行
+
+どれか1つに取り組めば、その回の宿題は完了します。原則として採点はありません。
+
+関係する回: 第1回
+
+--- trace ---
+[tool call]   search_glossary({"query": "3レベル"})
+[tool return] search_glossary -> [{"term": "宿題の3レベル", "lecture": 1, "definition": "AIE2026の宿題の構成。「基礎（講義内容の確認）」「実装（自分でコードを書く）」「発展（調査や試行）」の3段階があり、どれか1つに取り組…
+[usage] RunUsage(cost=Decimal('0.0003413'), details={'input_tokens': 2128, 'output_tokens': 257, 'cache_creation_input_tokens': 0, 'cache_read_input_tokens': 0, 'thinking_tokens': 73}, input_tokens=2128, output_tokens=257, requests=2, tool_calls=1)
