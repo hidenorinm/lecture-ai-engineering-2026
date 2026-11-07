@@ -27,8 +27,7 @@
   - app/tools.py に save_learning_log(title, content) を追加した。learning_log/YYYY-MM-DD.md（日本時間の日付）に追記する。保存先のパスはコード側で決め、モデルの引数からは決めない（作業フォルダの外に書かせないため）
   - app/agent.py で requires_approval=True を付けて登録し、output_type を [str, DeferredToolRequests] にした
   - main() で、承認待ちになったら title と content を全文表示して「保存しますか？ [y/N]」と聞き、y なら承認、それ以外と入力できないときは ToolDenied にして、履歴と承認結果を渡して続きを実行するようにした
-  - INSTRUCTIONS は変えていない（docstring だけで呼ばれるかを見るため）
-  - Claude Code に方針の説明をさせてから実装させ、差分と承認の流れの説明を読んで採用した。偽モデル（TestModel）で、承認前にファイルが作られないことも確かめた
+  - Claude Code に方針の説明をさせてから実装させ、差分と承認の流れの説明を読んで採用した。
 - 結果：
   - 承認した場合：「今日の学びを記録して：…」で save_learning_log が呼ばれ、承認前に内容が表示された。y のあとに learning_log/2026-11-07.md に保存され、ファイルの中身は承認画面の内容と一致した
   - 拒否した場合：Enter（N）で拒否すると、ファイルの行数は 6 → 6 で変わらず、モデルは「拒否されたため、記録は作成されていません。同じ内容での再保存は行っていません」と答えた
