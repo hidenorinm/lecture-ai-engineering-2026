@@ -123,8 +123,12 @@ def build_judge(model, rubric: str) -> Agent:
     return Agent(model, output_type=JudgeResult, instructions=instructions, model_settings={"temperature": 0.0})
 
 
-def build_llm_model(model_name: str) -> GoogleModel:
-    """Gemini のモデルを作る。API キーが無ければ手順を表示して終了する（app.agent と同じ）。"""
+def build_llm_model(model_name: str):
+    """Gemini（または claude で始まる名前なら Claude）のモデルを作る。Gemini は API キーが無ければ手順を表示して終了する（app.agent と同じ）。"""
+    if model_name.startswith("claude"):
+        from pydantic_ai.models.anthropic import AnthropicModel
+
+        return AnthropicModel(model_name)  # API キーは環境変数 ANTHROPIC_API_KEY から自動で読まれる
     return GoogleModel(model_name, provider=GoogleProvider(api_key=get_api_key()))
 
 
