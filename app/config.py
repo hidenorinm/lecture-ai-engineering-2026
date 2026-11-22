@@ -18,7 +18,7 @@ RAG_TREE = ROOT / "data/rag_data/tree.json"
 RAG_GRAPH = ROOT / "data/rag_data/graph.json"
 RAG_DB = Path(os.getenv("AIE_RAG_DB", str(ROOT / "data/rag_data/index.sqlite3")))
 RAG_DOCUMENT_IDS = ("lec01-main", "lec02-main", "lec03-main")
-RAG_TOP_K = 5
+RAG_TOP_K = 10
 GRAPH_START_K = 3
 GRAPH_HOPS = 2
 GRAPH_MAX_RESULTS = 10
@@ -26,6 +26,13 @@ EMBEDDING_MODEL = "gemini-embedding-001"
 EMBEDDING_DIMENSIONS = 768
 # 2,048トークンの上限に対し、タスク指定等の分を残す。超過時は切り捨てず停止する。
 EMBEDDING_MAX_TOKENS = 2000
+
+# 埋め込みの方式。AIE_EMBEDDER=local のときだけ、CPUで動くローカルモデルを使う（未設定は Gemini）。
+EMBEDDER = os.getenv("AIE_EMBEDDER", "gemini")
+LOCAL_EMBEDDING_MODEL = "intfloat/multilingual-e5-small"
+LOCAL_EMBEDDING_FILE = "onnx/model_qint8_avx512_vnni.onnx"  # 量子化版（約118MB）
+LOCAL_EMBEDDING_DIMENSIONS = 384
+LOCAL_EMBEDDING_MAX_TOKENS = 512  # モデルの入力上限。超えた分は切り捨てる
 
 
 def api_error_message(status: int, detail: str = "") -> str:

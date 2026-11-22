@@ -54,8 +54,13 @@ def build_index(source: Path = r.RAG_SOURCE, destination: Path = r.RAG_DB,
         os.replace(temporary, destination)
     finally:
         temporary.unlink(missing_ok=True)
-    return {"pages": len(pages), "model": r.EMBEDDING_MODEL, "dimensions": r.EMBEDDING_DIMENSIONS,
+    model, dimensions = r.embedding_model_info()
+    result = {"pages": len(pages), "model": model, "dimensions": dimensions,
             "bytes": destination.stat().st_size, "database": str(destination)}
+    if r.EMBEDDER == "local":
+        result["truncated_pages"] = r.truncated_count
+        print(f"[truncated] 入力上限（{r.LOCAL_EMBEDDING_MAX_TOKENS}トークン）で切り捨てたページ: {r.truncated_count} / {len(pages)}")
+    return result
 
 
 if __name__ == "__main__":

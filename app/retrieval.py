@@ -15,7 +15,8 @@ from pydantic_ai.exceptions import ModelHTTPError
 import sqlite_vec
 
 from app.config import (
-    EMBEDDING_DIMENSIONS, EMBEDDING_MAX_TOKENS, EMBEDDING_MODEL,
+    EMBEDDER, EMBEDDING_DIMENSIONS, EMBEDDING_MAX_TOKENS, EMBEDDING_MODEL,
+    LOCAL_EMBEDDING_DIMENSIONS, LOCAL_EMBEDDING_FILE, LOCAL_EMBEDDING_MAX_TOKENS, LOCAL_EMBEDDING_MODEL,
     RAG_DB, RAG_DOCUMENT_IDS, RAG_SOURCE, RAG_TOP_K, RAG_TREE, get_api_key,
     RAG_GRAPH, GRAPH_START_K, GRAPH_HOPS, GRAPH_MAX_RESULTS,
 )
@@ -92,8 +93,60 @@ def normalized_vector(values: list[float]) -> list[float]:
     return [value / norm for value in values]
 
 
+# 索引作成時に、ローカルモデルの入力上限で切り捨てたページ数を数える
+truncated_count = 0
+_local_model = None
+
+
+def embedding_model_info() -> tuple[str, int]:
+    """いま使う埋め込みの（モデル名, 次元数）。"""
+    if EMBEDDER == "local":
+        return LOCAL_EMBEDDING_MODEL, LOCAL_EMBEDDING_DIMENSIONS
+    return EMBEDDING_MODEL, EMBEDDING_DIMENSIONS
+
+
+def _load_local_model():
+    """多言語e5-small（ONNX・量子化版）を初回だけ取得して読み込む。torch は使わない。"""
+    global _local_model
+    if _local_model is None:
+        from huggingface_hub import hf_hub_download
+        import onnxruntime
+        from tokenizers import Tokenizer
+
+        model_path = hf_hub_download(LOCAL_EMBEDDING_MODEL, LOCAL_EMBEDDING_FILE)
+        tokenizer_path = hf_hub_download(LOCAL_EMBEDDING_MODEL, "onnx/tokenizer.json")
+        tokenizer = Tokenizer.from_file(tokenizer_path)
+        tokenizer.enable_truncation(max_length=LOCAL_EMBEDDING_MAX_TOKENS)
+        session = onnxruntime.InferenceSession(model_path, providers=["CPUExecutionProvider"])
+        _local_model = (tokenizer, session)
+    return _local_model
+
+
+def embed_text_local(text: str, task_type: str) -> list[float]:
+    """ローカルのe5モデルで埋め込む。上限を超えたら切り捨て、truncated_count を増やす。"""
+    global truncated_count
+    import numpy as np
+
+    prefix = "query: " if task_type == "RETRIEVAL_QUERY" else "passage: "
+    tokenizer, session = _load_local_model()
+    encoding = tokenizer.encode(prefix + text)
+    if encoding.overflowing:
+        truncated_count += 1
+    ids = np.array([encoding.ids], dtype=np.int64)
+    mask = np.array([encoding.attention_mask], dtype=np.int64)
+    inputs = {"input_ids": ids, "attention_mask": mask}
+    names = {i.name for i in session.get_inputs()}
+    if "token_type_ids" in names:
+        inputs["token_type_ids"] = np.zeros_like(ids)
+    hidden = session.run(None, inputs)[0][0]  # (トークン数, 次元)
+    pooled = (hidden * mask[0][:, None]).sum(axis=0) / mask[0].sum()  # 平均プーリング
+    return normalized_vector(pooled.astype(float).tolist())
+
+
 def embed_text(text: str, task_type: str) -> list[float]:
-    """Geminiで文章を埋め込む。入力上限を超えた場合は切り捨てず停止する。"""
+    """文章を埋め込む。既定はGemini（入力上限超過は切り捨てず停止）。AIE_EMBEDDER=local ならローカルモデル。"""
+    if EMBEDDER == "local":
+        return embed_text_local(text, task_type)
     with genai.Client(api_key=get_api_key()) as client:
         count = client.models.count_tokens(model=EMBEDDING_MODEL, contents=text).total_tokens
         if count is None or count > EMBEDDING_MAX_TOKENS:

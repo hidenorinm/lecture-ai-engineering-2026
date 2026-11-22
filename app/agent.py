@@ -17,6 +17,7 @@
 import argparse
 import inspect
 import json
+import os
 from pathlib import Path
 from contextlib import nullcontext
 from time import perf_counter
@@ -26,8 +27,10 @@ from pydantic_ai.exceptions import ModelHTTPError
 from fastmcp import Client
 from pydantic_ai.mcp import MCPToolset, StdioTransport
 from pydantic_ai.messages import ToolCallPart, ToolReturnPart
+from pydantic_ai.models.anthropic import AnthropicModel
 from pydantic_ai.models.google import GoogleModel
 from pydantic_ai.models.test import TestModel
+from pydantic_ai.providers.anthropic import AnthropicProvider
 from pydantic_ai.providers.google import GoogleProvider
 
 from app import tools
@@ -115,7 +118,13 @@ def build_mcp_agent(config_path: Path = MCP_CONFIG) -> Agent:
     return Agent(instructions=INSTRUCTIONS, toolsets=load_mcp_servers(config_path))
 
 
-def build_model() -> GoogleModel:
+def build_model() -> GoogleModel | AnthropicModel:
+    # 回答生成のモデルだけ Claude に切り替えられる。検索用の埋め込みは常に Gemini（retrieval.py）
+    if MODEL.startswith("claude"):
+        anthropic_key = os.getenv("ANTHROPIC_API_KEY")
+        if not anthropic_key:
+            raise SystemExit("ANTHROPIC_API_KEY が設定されていません。Claude を使うには環境変数 ANTHROPIC_API_KEY にAPIキーを設定してください。")
+        return AnthropicModel(MODEL, provider=AnthropicProvider(api_key=anthropic_key))
     return GoogleModel(MODEL, provider=GoogleProvider(api_key=get_api_key()))
 
 
