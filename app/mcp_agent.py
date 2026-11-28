@@ -13,6 +13,7 @@ MCP サーバーを起動または接続し、サーバーが公開している�
 import argparse
 import inspect
 import json
+import os
 from pathlib import Path
 
 from fastmcp import Client
@@ -21,8 +22,10 @@ from pydantic_ai import Agent
 from pydantic_ai.exceptions import AgentRunError, ModelHTTPError, UserError
 from pydantic_ai.mcp import MCPToolset, StdioTransport
 from pydantic_ai.messages import RetryPromptPart, ToolCallPart, ToolReturnPart
+from pydantic_ai.models.anthropic import AnthropicModel
 from pydantic_ai.models.google import GoogleModel
 from pydantic_ai.models.test import TestModel
+from pydantic_ai.providers.anthropic import AnthropicProvider
 from pydantic_ai.providers.google import GoogleProvider
 
 from app.config import MODEL, api_error_message, get_api_key
@@ -100,7 +103,13 @@ def build_mcp_agent(config_path: Path = MCP_CONFIG) -> Agent:
     return Agent(instructions=INSTRUCTIONS, toolsets=load_mcp_servers(config_path))
 
 
-def build_model() -> GoogleModel:
+def build_model() -> GoogleModel | AnthropicModel:
+    # AIE_MODEL が claude で始まるときだけ Claude を使う（Gemini が使えないため）
+    if MODEL.startswith("claude"):
+        anthropic_key = os.getenv("ANTHROPIC_API_KEY")
+        if not anthropic_key:
+            raise SystemExit("ANTHROPIC_API_KEY が設定されていません。Claude を使うには環境変数 ANTHROPIC_API_KEY にAPIキーを設定してください。")
+        return AnthropicModel(MODEL, provider=AnthropicProvider(api_key=anthropic_key))
     return GoogleModel(MODEL, provider=GoogleProvider(api_key=get_api_key()))
 
 
