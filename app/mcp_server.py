@@ -29,6 +29,8 @@ server.tool()(tools.search_glossary)
 
 # TODO(宿題・基礎): get_lecture_summary も公開しよう
 server.tool()(tools.get_lecture_summary)
+# 宿題・実装: 確認問題を作るツール（範囲外の回では、指定できる回を返す）
+server.tool()(tools.make_quiz)
 
 
 def main() -> None:

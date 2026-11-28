@@ -5,8 +5,11 @@
 """
 
 import json
+import random
 from functools import cache
 from pathlib import Path
+
+from mcp.server.mcpserver.exceptions import ToolError
 
 from app.config import api_error_message
 
@@ -80,6 +83,25 @@ def get_lecture_summary(lecture: int) -> str:
         return f"第{lecture}回の要点はまだありません。用意されている回: {', '.join(available)}"
     return path.read_text(encoding="utf-8")
 
+
+def make_quiz(lecture: int) -> str:
+    """指定した回の用語から確認問題を1問作り、問題と答えを返す。
+
+    確認問題・復習問題を求められたときに使う。lecture は回の番号（1始まりの整数）。
+    """
+    glossary = load_glossary()
+    terms = [e for e in glossary if e["lecture"] == lecture]
+    if not terms:
+        available = "、".join(f"第{n}回" for n in sorted({e["lecture"] for e in glossary}))
+        raise ToolError(
+            f"第{lecture}回の確認問題は作れません。用語集に第{lecture}回の用語がないためです。"
+            f"lecture には、用語がある回の番号（{available}）のどれかを指定してください。"
+        )
+    entry = random.choice(terms)
+    return json.dumps(
+        {"question": f"「{entry['term']}」の意味は？", "answer": entry["definition"]},
+        ensure_ascii=False,
+    )
 
 def search_materials(query: str) -> str:
     """第1〜3回の本講義資料を検索し、関連ページの本文・タイトル・ページ番号を返す。
