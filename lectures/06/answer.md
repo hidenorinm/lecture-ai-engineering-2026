@@ -20,7 +20,15 @@
 
 <!-- 基礎・実装・発展のどれか1つに取り組めば完了です。 -->
 
-- 取り組んだレベル：基礎 / 実装 / 発展
-- やったこと：
+- 取り組んだレベル：基礎
+- やったこと：app/mcp_server.py の TODO の下に server.tool()(tools.get_lecture_summary) を1行足した。エージェント側（app/mcp_agent.py・app/mcp_servers.json）は変えていない（git status で app/mcp_server.py だけが変わったことを確認）
 - 結果：
+  - --list-tools の一覧に glossary_get_lecture_summary が増え、ツールが7個から8個になった
+  - 「第2回では何を学びますか？」の [tool call]：glossary_get_lecture_summary({"lecture": 2})。search_glossary は呼ばれず、モデル応答は2回、入力 9,743 tokens / 出力 620 tokens
+  - 回答は第2回の内容（LoRA、Colab での演習、FAQ にない質問への答え方は学習で直らないこと）と合っていた
+  - uv run pytest -q は 21 件すべて成功
 - 気づき・疑問：
+  - エージェントは起動のたびにサーバーへツールの一覧を問い合わせるので、サーバー側を変えるだけで新しいツールが使えた
+  - 「第2回」という質問に対して、モデルは引数に数値の 2 を入れていた。引数の型は関数の型ヒントから作られている
+  - 指示文の「回の内容を聞かれたら get_lecture_summary を使う」のとおり、用語集の検索は呼ばれなかった
+  - 入力トークンは演習の STEP 2（ツール1個、1,713）より大きく増えた
